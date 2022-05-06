@@ -9,7 +9,7 @@ import {
 import { emit } from "@create-figma-plugin/utilities";
 import { h } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
-import { InsertCodeHandler } from "./types";
+import { DrawImageHandler, InsertCodeHandler } from "./types";
 import { Document, Page } from "react-pdf";
 import { pdfjs } from "react-pdf";
 
@@ -25,6 +25,61 @@ function _arrayBufferToBase64(buffer: ArrayBuffer) {
   return window.btoa(binary);
 }
 
+function convertDataURIToBinary(dataURI: string) {
+  var raw = window.atob(dataURI);
+  var rawLength = raw.length;
+  var array = new Uint8Array(new ArrayBuffer(rawLength));
+
+  for (var i = 0; i < rawLength; i++) {
+    array[i] = raw.charCodeAt(i);
+  }
+  return array;
+}
+
+const renderPage = (
+  pdf: any,
+  page: any,
+  pageNum: number,
+  pageLimit: number
+) => {
+  console.log("Rendering " + pageNum + " out of " + pageLimit);
+  var scale = 1.5;
+  var viewport = page.getViewport({ scale: scale });
+  //
+  // Prepare canvas using PDF page dimensions
+  //
+  var canvas = document.getElementById("testCanvas") as HTMLCanvasElement;
+  var context = canvas.getContext("2d") as CanvasRenderingContext2D;
+  canvas.height = viewport.height;
+  canvas.width = viewport.width;
+
+  //
+  // Render PDF page into canvas context
+  //
+  page
+    .render({ canvasContext: context, viewport: viewport })
+    .promise.then(() => {
+      const canvasDataURL = canvas.toDataURL();
+      emit<DrawImageHandler>(
+        "DRAW_IMAGE",
+        convertDataURIToBinary(
+          canvasDataURL.substring(
+            canvasDataURL.indexOf(";base64,") + ";base64,".length
+          )
+        ),
+        viewport.width,
+        viewport.height,
+        pageNum - 1
+      );
+
+      if (pageNum < pageLimit) {
+        pdf.getPage(pageNum + 1).then((pg: any) => {
+          renderPage(pdf, pg, pageNum + 1, pageLimit);
+        });
+      }
+    });
+};
+
 function Plugin() {
   const [code, setCode] = useState(`function add(a, b) {\n  return a + b;\n}`);
   const [pdfUploaded, setPdfUploaded] = useState(false);
@@ -36,21 +91,11 @@ function Plugin() {
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js";
   }, []);
 
-  const handleInsertCodeButtonClick = useCallback(
-    function () {
-      emit<InsertCodeHandler>("INSERT_CODE", code);
-    },
-    [code]
-  );
-
   const handleSelectedFiles = useCallback(
     (files: Array<File>) => {
-      console.log("here", files);
       if (files.length > 0) {
-        console.log("got a file");
         const arrayBufPromise = files[0].arrayBuffer() as Promise<ArrayBuffer>;
         arrayBufPromise.then((arrayBuf: ArrayBuffer) => {
-          console.log("resolved promise");
           setPdfData(arrayBuf);
         });
       }
@@ -60,6 +105,19 @@ function Plugin() {
 
   useEffect(() => {
     setPdfUploaded(pdfData !== null);
+  }, [pdfData]);
+
+  const handleInsertPDF = useCallback(() => {
+    pdfjs
+      .getDocument({ data: new Uint8Array(pdfData as ArrayBuffer) })
+      .promise.then((pdf) => {
+        const numPages = pdf.numPages;
+        if (numPages > 0) {
+          pdf.getPage(1).then((page) => {
+            renderPage(pdf, page, 1, numPages);
+          });
+        }
+      });
   }, [pdfData]);
 
   return (
@@ -89,10 +147,10 @@ function Plugin() {
         </div>
       )}
       <VerticalSpace space="large" />
-      <Button
-        fullWidth
-        disabled={!pdfUploaded}
-        onClick={handleInsertCodeButtonClick}>
+      <canvas
+        id="testCanvas"
+        style={{ position: "absolute", left: 1000 }}></canvas>
+      <Button fullWidth disabled={!pdfUploaded} onClick={handleInsertPDF}>
         Insert {numPages} {numPages === 1 ? "page" : "pages"}
       </Button>
       <VerticalSpace space="small" />
