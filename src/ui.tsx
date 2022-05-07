@@ -9,13 +9,12 @@ import {
   Text,
   Inline,
 } from "@create-figma-plugin/ui";
-import { emit, isWithinInstanceNode } from "@create-figma-plugin/utilities";
+import { emit } from "@create-figma-plugin/utilities";
 import { h, JSX } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { DrawImageHandler } from "./types";
 import { Document, Page } from "react-pdf";
 import { pdfjs } from "react-pdf";
-import { convertDataURIToBinary } from "./utils";
 
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
@@ -28,7 +27,6 @@ const renderPage = (
   scale: number,
   pdfName: string
 ) => {
-  console.log("rendeirng at", scale);
   var viewport = page.getViewport({ scale: scale });
 
   // Prepare canvas using PDF page dimensions
