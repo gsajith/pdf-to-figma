@@ -6,7 +6,7 @@ _This plugin is built with [Create Figma Plugin](https://yuanqing.github.io/crea
 
 ### Todos
 
-- Inserting large PDFs (e.g. large image) at large sizes (3x-4x) inserts a blank image, consider throwing a warning
+- Inserting PDFs at sizes larger than 4000 width or height inserts a blank image, consider throwing a warning
 
 ### Pre-requisites
 

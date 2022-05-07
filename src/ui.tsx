@@ -8,6 +8,8 @@ import {
   DropdownOption,
   Text,
   Inline,
+  Banner,
+  IconWarningFilled32,
 } from "@create-figma-plugin/ui";
 import { emit } from "@create-figma-plugin/utilities";
 import { h, JSX } from "preact";
@@ -17,6 +19,7 @@ import { Document, Page } from "react-pdf";
 import { pdfjs } from "react-pdf";
 
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
+const MAX_DIM = 4080;
 
 // Recursively render the pages one by one
 const renderPage = (
@@ -200,7 +203,10 @@ function Plugin() {
             onLoadSuccess={(pdf) => {
               setNumPages(pdf.numPages);
             }}>
-            <Page pageNumber={1} width={320 * pdfScale} />
+            <Page
+              pageNumber={1}
+              width={Math.min(320, pdfWidth / pdfScale) * pdfScale}
+            />
           </Document>
         </div>
       )}
@@ -211,6 +217,23 @@ function Plugin() {
           position: "fixed",
           left: 1000,
         }}></canvas>
+
+      {pdfUploaded &&
+        pdfData !== null &&
+        (pdfWidth > MAX_DIM || pdfHeight > MAX_DIM) && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: 80,
+              left: 48,
+              borderRadius: 8,
+              overflow: "hidden",
+            }}>
+            <Banner icon={<IconWarningFilled32 />} type="warning">
+              These PDF dimensions may be too large
+            </Banner>
+          </div>
+        )}
 
       {pdfUploaded && (
         <div style={{ position: "fixed", top: 12, right: 12 }}>
