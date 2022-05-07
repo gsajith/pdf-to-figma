@@ -4,6 +4,10 @@
 
 _This plugin is built with [Create Figma Plugin](https://yuanqing.github.io/create-figma-plugin/)._
 
+### Todos
+
+- Inserting large PDFs (e.g. large image) at large sizes (3x-4x) inserts a blank image, consider throwing a warning
+
 ### Pre-requisites
 
 - [Node.js](https://nodejs.org) – v14
