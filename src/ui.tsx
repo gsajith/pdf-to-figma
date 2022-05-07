@@ -9,53 +9,30 @@ import {
 import { emit } from "@create-figma-plugin/utilities";
 import { h } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
-import { DrawImageHandler, InsertCodeHandler } from "./types";
+import { DrawImageHandler } from "./types";
 import { Document, Page } from "react-pdf";
 import { pdfjs } from "react-pdf";
+import { convertDataURIToBinary } from "./utils";
 
 const ACCEPTED_FILE_TYPES = ["application/pdf"];
 
-function _arrayBufferToBase64(buffer: ArrayBuffer) {
-  var binary = "";
-  var bytes = new Uint8Array(buffer);
-  var len = bytes.byteLength;
-  for (var i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return window.btoa(binary);
-}
-
-function convertDataURIToBinary(dataURI: string) {
-  var raw = window.atob(dataURI);
-  var rawLength = raw.length;
-  var array = new Uint8Array(new ArrayBuffer(rawLength));
-
-  for (var i = 0; i < rawLength; i++) {
-    array[i] = raw.charCodeAt(i);
-  }
-  return array;
-}
-
+// Recursively render the pages one by one
 const renderPage = (
   pdf: any,
   page: any,
   pageNum: number,
   pageLimit: number
 ) => {
-  console.log("Rendering " + pageNum + " out of " + pageLimit);
   var scale = 1.5;
   var viewport = page.getViewport({ scale: scale });
-  //
+
   // Prepare canvas using PDF page dimensions
-  //
   var canvas = document.getElementById("testCanvas") as HTMLCanvasElement;
   var context = canvas.getContext("2d") as CanvasRenderingContext2D;
   canvas.height = viewport.height;
   canvas.width = viewport.width;
 
-  //
   // Render PDF page into canvas context
-  //
   page
     .render({ canvasContext: context, viewport: viewport })
     .promise.then(() => {
@@ -81,7 +58,6 @@ const renderPage = (
 };
 
 function Plugin() {
-  const [code, setCode] = useState(`function add(a, b) {\n  return a + b;\n}`);
   const [pdfUploaded, setPdfUploaded] = useState(false);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
@@ -109,7 +85,10 @@ function Plugin() {
 
   const handleInsertPDF = useCallback(() => {
     pdfjs
-      .getDocument({ data: new Uint8Array(pdfData as ArrayBuffer) })
+      .getDocument({
+        data: new Uint8Array(pdfData as ArrayBuffer),
+        fontExtraProperties: true,
+      })
       .promise.then((pdf) => {
         const numPages = pdf.numPages;
         if (numPages > 0) {
@@ -123,6 +102,7 @@ function Plugin() {
   return (
     <Container>
       <VerticalSpace space="small" />
+
       {!pdfUploaded && (
         <FileUploadDropzone
           acceptedFileTypes={ACCEPTED_FILE_TYPES}
@@ -133,26 +113,45 @@ function Plugin() {
           </Text>
         </FileUploadDropzone>
       )}
+
+      <VerticalSpace space="large" />
       {pdfUploaded && pdfData !== null && (
-        <div style={{ border: "1px solid gray" }}>
+        <div style={{ border: "1px solid gray", position: "relative" }}>
           <Document
             file={pdfData}
             onLoadError={console.error}
             onLoadSuccess={(pdf) => {
               setNumPages(pdf.numPages);
-              console.log("loaded:", pdf);
             }}>
             <Page pageNumber={1} width={350} />
           </Document>
         </div>
       )}
-      <VerticalSpace space="large" />
+
       <canvas
         id="testCanvas"
-        style={{ position: "absolute", left: 1000 }}></canvas>
-      <Button fullWidth disabled={!pdfUploaded} onClick={handleInsertPDF}>
-        Insert {numPages} {numPages === 1 ? "page" : "pages"}
-      </Button>
+        style={{
+          position: "fixed",
+          left: 1000,
+        }}></canvas>
+
+      <div style={{ position: "fixed", bottom: 12, width: 376 }}>
+        {pdfUploaded && (
+          <Button
+            destructive
+            secondary
+            fullWidth
+            style={{ backgroundColor: "white", marginBottom: 8 }}
+            onClick={() => {
+              setPdfData(null);
+            }}>
+            Clear PDF
+          </Button>
+        )}
+        <Button fullWidth disabled={!pdfUploaded} onClick={handleInsertPDF}>
+          Insert {numPages} {numPages === 1 ? "page" : "pages"}
+        </Button>
+      </div>
       <VerticalSpace space="small" />
     </Container>
   );
