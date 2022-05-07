@@ -28,6 +28,7 @@ const renderPage = (
   scale: number,
   pdfName: string
 ) => {
+  console.log("rendeirng at", scale);
   var viewport = page.getViewport({ scale: scale });
 
   // Prepare canvas using PDF page dimensions
@@ -43,10 +44,8 @@ const renderPage = (
       const canvasDataURL = canvas.toDataURL();
       emit<DrawImageHandler>(
         "DRAW_IMAGE",
-        convertDataURIToBinary(
-          canvasDataURL.substring(
-            canvasDataURL.indexOf(";base64,") + ";base64,".length
-          )
+        canvasDataURL.substring(
+          canvasDataURL.indexOf(";base64,") + ";base64,".length
         ),
         viewport.width,
         viewport.height,
@@ -224,7 +223,7 @@ function Plugin() {
               padding: "8px 12px",
               borderRadius: "0px 0px 0px 12px",
             }}>
-            {pdfWidth} x {pdfHeight}
+            {Math.round(pdfWidth)} x {Math.round(pdfHeight)}
           </div>
         </div>
       )}

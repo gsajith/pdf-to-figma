@@ -8,7 +8,7 @@ export interface InsertCodeHandler extends EventHandler {
 export interface DrawImageHandler extends EventHandler {
   name: "DRAW_IMAGE";
   handler: (
-    uint8: Uint8Array,
+    base64: string,
     width: number,
     height: number,
     index: number,
