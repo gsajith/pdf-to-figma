@@ -6,14 +6,15 @@ const SAVED_VALS = [0, 0, 0];
 export default function () {
   on<DrawImageHandler>(
     "DRAW_IMAGE",
-    async function (uint8: Uint8Array, width, height, index) {
+    async function (uint8: Uint8Array, width, height, index, name) {
       if (index === 0) {
         SAVED_VALS[0] = 0;
         SAVED_VALS[1] = figma.viewport.center.x;
         SAVED_VALS[2] = figma.viewport.center.y;
       }
 
-      const rect = figma.createRectangle();
+      const rect = figma.createFrame();
+      rect.name = name;
       rect.x = SAVED_VALS[1] + SAVED_VALS[0];
       rect.y = SAVED_VALS[2];
       rect.resize(width, height);
@@ -32,5 +33,5 @@ export default function () {
       figma.currentPage.selection = [rect];
     }
   );
-  showUI({ width: 400, height: 550 });
+  showUI({ width: 370, height: 428 });
 }

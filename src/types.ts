@@ -11,6 +11,7 @@ export interface DrawImageHandler extends EventHandler {
     uint8: Uint8Array,
     width: number,
     height: number,
-    index: number
+    index: number,
+    fileName: string
   ) => void;
 }
