@@ -1,6 +1,6 @@
-import { on, showUI } from "@create-figma-plugin/utilities";
+import { on, showUI, emit } from "@create-figma-plugin/utilities";
 
-import { DrawImageHandler } from "./types";
+import { DrawImageHandler, ImageInsertedHandler } from "./types";
 
 const SAVED_VALS = [0, 0, 0];
 export default function () {
@@ -30,6 +30,7 @@ export default function () {
       ];
       figma.currentPage.appendChild(rect);
       figma.viewport.scrollAndZoomIntoView([rect]);
+      emit<ImageInsertedHandler>("IMAGE_INSERTED", index);
       figma.currentPage.selection = [rect];
     }
   );

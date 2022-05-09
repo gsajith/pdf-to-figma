@@ -11,10 +11,10 @@ import {
   Banner,
   IconWarningFilled32,
 } from "@create-figma-plugin/ui";
-import { emit } from "@create-figma-plugin/utilities";
+import { emit, on } from "@create-figma-plugin/utilities";
 import { h, JSX } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
-import { DrawImageHandler } from "./types";
+import { DrawImageHandler, ImageInsertedHandler } from "./types";
 import { Document, Page } from "react-pdf";
 import { pdfjs } from "react-pdf";
 
@@ -63,14 +63,17 @@ const renderPage = (
 };
 
 function Plugin() {
-  const [pdfUploaded, setPdfUploaded] = useState(false);
+  const [pdfUploaded, setPdfUploaded] = useState<boolean>(false);
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
   const [pdfName, setPdfName] = useState<string | null>(null);
   const [pdfWidth, setPdfWidth] = useState<number>(0);
   const [pdfHeight, setPdfHeight] = useState<number>(0);
   const [pdfScale, setPdfScale] = useState<number>(1);
+  const [inserting, setInserting] = useState<boolean>(false);
   const [dropdownScaleValue, setDropdownScaleValue] = useState<string>("1x");
+  const [insertButtonText, setInsertButtonText] =
+    useState<string>("Awaiting upload");
   const options: Array<DropdownOption> = [
     { value: "0.5x" },
     { value: "0.75x" },
@@ -81,8 +84,8 @@ function Plugin() {
     { value: "4x" },
   ];
 
-  // Set PDF.js worker on load
   useEffect(() => {
+    // Set PDF.js worker on load
     pdfjs.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js";
   }, []);
@@ -143,6 +146,7 @@ function Plugin() {
   // When "Insert" button is pressed, render the PDF images
   const handleInsertPDF = useCallback(() => {
     if (pdfData !== null) {
+      setInserting(true);
       pdfjs
         .getDocument({
           data: new Uint8Array(pdfData as ArrayBuffer),
@@ -165,6 +169,28 @@ function Plugin() {
         });
     }
   }, [pdfData, pdfName, pdfScale]);
+
+  useEffect(() => {
+    if (numPages === null) {
+      setInserting(false);
+      setInsertButtonText("Awaiting upload");
+    } else if (inserting) {
+      setInsertButtonText("Inserting ...");
+    } else {
+      if (numPages === 1) {
+        setInsertButtonText("Insert 1 page");
+      } else {
+        setInsertButtonText("Insert " + numPages + " pages");
+      }
+    }
+  }, [numPages, inserting]);
+
+  // Listen for event callback from main.ts when images are inserted
+  useEffect(() => {
+    return on<ImageInsertedHandler>("IMAGE_INSERTED", (index: number) => {
+      setInserting(numPages === null || index + 1 < numPages);
+    });
+  }, [numPages]);
 
   return (
     <Container>
@@ -263,19 +289,20 @@ function Plugin() {
             />
           </Inline>
           <Button
-            disabled={!pdfUploaded}
+            disabled={!pdfUploaded || inserting}
             onClick={handleInsertPDF}
             style={{ minWidth: 120 }}>
-            Insert {numPages} {numPages === 1 ? "page" : "pages"}
+            {insertButtonText}
           </Button>
           <Button
-            disabled={!pdfUploaded}
+            disabled={!pdfUploaded || inserting}
             destructive
             secondary
             style={{ backgroundColor: "white" }}
             onClick={() => {
               setPdfData(null);
               setPdfName(null);
+              setNumPages(null);
             }}>
             Clear PDF
           </Button>

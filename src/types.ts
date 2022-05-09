@@ -15,3 +15,8 @@ export interface DrawImageHandler extends EventHandler {
     fileName: string
   ) => void;
 }
+
+export interface ImageInsertedHandler extends EventHandler {
+  name: "IMAGE_INSERTED";
+  handler: (index: number) => void;
+}
