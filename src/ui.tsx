@@ -10,6 +10,11 @@ import {
   Inline,
   Banner,
   IconWarningFilled32,
+  Divider,
+  IconInfo32,
+  Toggle,
+  Textbox,
+  IconButton,
 } from "@create-figma-plugin/ui";
 import { emit, on } from "@create-figma-plugin/utilities";
 import { h, JSX } from "preact";
@@ -74,6 +79,9 @@ function Plugin() {
   const [dropdownScaleValue, setDropdownScaleValue] = useState<string>("1x");
   const [insertButtonText, setInsertButtonText] =
     useState<string>("Awaiting upload");
+  const [preserveLayers, setPreserveLayers] = useState<boolean>(true);
+  const [infoHovered, setInfoHovered] = useState<boolean>(false);
+  const [apiKey, setApiKey] = useState<string>("");
   const options: Array<DropdownOption> = [
     { value: "0.5x" },
     { value: "0.75x" },
@@ -274,7 +282,77 @@ function Plugin() {
           </div>
         </div>
       )}
-      <div style={{ position: "fixed", bottom: 12, left: 20, width: 346 }}>
+
+      {/* Controls */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 12,
+          width: 346,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          zIndex: 2,
+        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+          }}>
+          <div style={{ position: "relative", marginRight: 8 }}>
+            <IconButton
+              value={infoHovered}
+              onChange={(event) => setInfoHovered(event.currentTarget.checked)}>
+              <IconInfo32
+                style={{
+                  borderRadius: 8,
+                }}
+              />
+            </IconButton>
+
+            {infoHovered && (
+              <div
+                style={{
+                  padding: "12px",
+                  position: "absolute",
+                  height: 100,
+                  width: 230,
+                  top: -98,
+                  left: 12,
+                  backgroundColor: "white",
+                  borderRadius: 4,
+                  border: "0.5px solid #dadada",
+                  boxShadow: "0px 0px 5px 0px #00000023",
+                }}>
+                <Text>
+                  Preserve text, shape, etc. from the original PDF as Figma
+                  layers. <b>This is a premium feature.</b>
+                  <br />
+                  <br />
+                  You can sign up for an API key{" "}
+                  <a href="https://google.com">here</a>.
+                </Text>
+              </div>
+            )}
+          </div>
+          <div>Preserve layers:</div>
+          <div style={{ width: 4 }} />
+          <Toggle value={preserveLayers} onValueChange={setPreserveLayers} />
+          <div style={{ width: 12 }} />
+          <div style={{ width: 178 }}>
+            <Textbox
+              password
+              disabled={!preserveLayers}
+              value={apiKey}
+              onInput={(event) => setApiKey(event.currentTarget.value)}
+              placeholder="Your API key here"
+            />
+          </div>
+        </div>
+        <VerticalSpace space="small" />
+        <Divider />
+        <VerticalSpace space="small" />
         <Inline style={{ marginBottom: 8 }} space="medium">
           <Inline space="extraSmall">
             <div>Scale:</div>

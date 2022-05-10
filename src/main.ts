@@ -34,5 +34,5 @@ export default function () {
       figma.currentPage.selection = [rect];
     }
   );
-  showUI({ width: 370, height: 428 });
+  showUI({ width: 370, height: 484 });
 }
