@@ -25,7 +25,7 @@
     "editorType": [
       "figma"
     ],
-    "id": "pdf-to-figma",
+    "id": "1105316927173658462",
     "name": "PDF to Figma",
     "main": "src/main.ts",
     "ui": "src/ui.tsx"
