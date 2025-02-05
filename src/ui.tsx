@@ -71,7 +71,7 @@ function Plugin() {
   const [pdfHeight, setPdfHeight] = useState<number>(0);
   const [pdfScale, setPdfScale] = useState<number>(1);
   const [inserting, setInserting] = useState<boolean>(false);
-  const [dropdownScaleValue, setDropdownScaleValue] = useState<string>("1x");
+  const [dropdownScaleValue, setDropdownScaleValue] = useState<string>("2x");
   const [insertButtonText, setInsertButtonText] =
     useState<string>("Awaiting upload");
   const options: Array<DropdownOption> = [
@@ -291,7 +291,7 @@ function Plugin() {
           <Button
             disabled={!pdfUploaded || inserting}
             onClick={handleInsertPDF}
-            style={{ minWidth: 120 }}>
+            style={{ minWidth: 120, background: "#1166b6" }}>
             {insertButtonText}
           </Button>
           <Button
