@@ -291,7 +291,7 @@ function Plugin() {
           <Button
             disabled={!pdfUploaded || inserting}
             onClick={handleInsertPDF}
-            style={{ minWidth: 120 }}>
+            style={{ minWidth: 120, background: "#1166b6" }}>
             {insertButtonText}
           </Button>
           <Button
